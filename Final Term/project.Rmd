@@ -1,0 +1,138 @@
+---
+title: "grp project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(readxl)
+library(MASS)
+library(MLmetrics)
+LungCapData <- read_excel("C:/Users/bapt6/Desktop/COURS/programming for data analytics/LungCapData.xls")
+
+```
+```{r}
+LungCapData$Gender[LungCapData$Gender == "female"] <- 1 
+LungCapData$Gender[LungCapData$Gender == "male"] <- 0 
+
+
+
+LungCapData$Smoke[LungCapData$Smoke == "no"] <- 0 
+LungCapData$Smoke[LungCapData$Smoke == "yes"] <- 1
+
+
+
+
+LungCapData$Caesarean[LungCapData$Caesarean == "no"] <- 0 
+LungCapData$Caesarean[LungCapData$Caesarean == "yes"] <- 1
+
+
+LungCapData$Gender <- as.numeric(LungCapData$Gender)
+LungCapData$Smoke <- as.numeric(LungCapData$Smoke)
+LungCapData$Caesarean <- as.numeric(LungCapData$Caesarean)
+str(LungCapData)
+```
+
+
+```{r}
+#don't include this part
+LungCapDataS <- subset(LungCapData, LungCapData$Smoke == 1)
+LungCapDataNS <- subset(LungCapData, LungCapData$Smoke == 0)
+LungCapDataYoung <- subset(LungCapData, LungCapData$Age < 10)
+LungCapDatateen <- subset(LungCapData, LungCapData$Age > 9 & LungCapData$Age < 16)
+LungCapDataAdult <- subset(LungCapData, LungCapData$Age >15)
+```
+
+```{r}
+#splitting the dataset in two parts
+i <- sample(2,nrow(LungCapData), replace = TRUE, prob = c(0.8,0.2))
+LungCapData_Training <- LungCapData[i==1,]
+LungCapData_Test <- LungCapData[i==2,]
+
+#produce a scatterplot matrix which include all the variables in the dataset
+pairs(LungCapData_Training[,1:6],lower.panel = NULL)
+
+#matrix of correlation between the variables
+cor(subset(LungCapData_Training))
+```
+
+
+```{r}
+#create a linear regression with LungCap as the response and all the other variables as the predictors
+require(ISLR)
+data(LungCapData)
+fitlm <- lm(LungCap~.,data = LungCapData_Training[,1:6])
+
+#diagnostic plot for the linear regression
+par(mfrow=c(2,2))
+plot(fitlm)
+```
+
+```{r}
+
+#create a null model
+intercept <- lm(LungCap ~ 1,data = LungCapData_Training)
+
+#create a full model
+cplt <- lm(LungCap~., data = LungCapData_Training)
+
+
+```
+
+```{r}
+#perform a forward step wise regression
+fwd <- stepAIC (intercept, direction = 'forward', scope = formula(cplt))
+#final model
+summary(fwd)
+
+ypredfwd <- predict(object = fwd, newdata = LungCapData_Test)
+
+#check the MAE
+MAE(y_pred = ypredfwd, y_true = LungCapData_Test$LungCap)
+
+#check the MSE
+MSE(y_pred = ypredfwd, y_true = LungCapData_Test$LungCap)
+```
+
+
+```{r}
+#perform a backward regression
+bckd <- stepAIC (cplt, direction='backward')
+
+#final model
+summary(bckd)
+
+ypredbckd <-predict(object = bckd, newdata = LungCapData_Test)
+
+#check the MAE
+MAE(y_pred = ypredbckd, y_true = LungCapData_Test$LungCap)
+
+#check the MSE
+MSE(y_pred = ypredbckd, y_true = LungCapData_Test$LungCap)
+```
+
+```{r}
+#perform a both direction stepwise regression
+both <- stepAIC (intercept, direction = 'both', scope = formula(cplt), trace = 0)
+
+both$anova
+summary(both)
+
+ypredboth <-predict(object = both, newdata = LungCapData_Test)
+
+#check the MAE
+MAE(y_pred = ypredboth, y_true = LungCapData_Test$LungCap)
+
+#check the MSE
+MSE(y_pred = ypredboth, y_true = LungCapData_Test$LungCap)
+```
+

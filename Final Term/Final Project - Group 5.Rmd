@@ -1,0 +1,197 @@
+---
+title: "FinalProject"
+author: "Aarish Salam Memon"
+date: "11/29/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(GGally)
+```
+
+```{R}
+##PART 1
+#Importing the data to our RMD file
+library(readxl)
+LungCapData <- read_excel("~/Downloads/LungCapData.xls")
+View(LungCapData)
+
+#Glimpse of data to visualize the content of dataset
+library(dplyr)
+glimpse(LungCapData)
+
+# Checking the duplicated data
+sum(duplicated(LungCapData))
+# There is no duplicate data
+
+## Checking the quantity of the attributes
+table(LungCapData$Gender)
+table(LungCapData$Smoke)
+table(LungCapData$Caesarean)
+
+## Summary of the dataset
+summary(LungCapData)
+
+## Head of the dataset
+head(LungCapData)
+
+## Checking the structre of the dataset
+str(LungCapData) 
+## We can see the data types of the dataset too
+
+## To check if there are any null values in the dataset
+colSums(is.na(LungCapData))
+
+#Histogram of Lung Capacity
+hist(LungCapData$LungCap)
+
+
+#Bar Plot of Smoke
+
+ggplot(LungCapData, aes(x = Smoke)) +
+  geom_bar(fill = "#0099f9") + labs(
+    title = "Lung Capacity Data By Smoking",
+    subtitle = "Smokers V/s Non-Smokers",
+    caption = "Source: Group 5"
+  )
+
+# Bar plot of Cesarean
+
+ggplot(LungCapData, aes(x = Caesarean)) +
+  geom_bar(fill = "#d1752e") + labs(
+    title = "Lung Capacity Data By Ceasarean",
+    subtitle = "Caesarean(Yes) V/s Ceasarean(No)",
+    caption = "Source: Group 5"
+  )
+
+# Bar plot of Gender
+
+ggplot(LungCapData, aes(x = Gender)) +
+  geom_bar(fill = "#2ed193") + labs(
+    title = "Lung Capacity Data By Gender",
+    subtitle = "Caesarean(Female) V/s Ceasarean(Male)",
+    caption = "Source: Group 5"
+  )
+
+#Histogram of Height in Inches
+
+ggplot(data = LungCapData, aes(x = Height)) +
+  geom_histogram(bins = 24, color = 'White', fill = 'Light Blue') + labs(
+    title = "Lung Capacity Data By Height",
+    subtitle = "Height in Inches",
+    caption = "Source: Group 5"
+  )
+
+#Histogram of Lung Capacity in CC
+
+ggplot(data = LungCapData, aes(x = LungCap)) +
+  geom_histogram(bins = 24, color = 'White', fill = 'Purple') + labs(
+    title = "Lung Capacity Data By Lung Capacity",
+    subtitle = "Lung Capacity in CC",
+    caption = "Source: Group 5"
+  )
+
+#Histogram of Age in Years
+
+ggplot(data = LungCapData, aes(x = Age)) +
+  geom_histogram(bins = 18, color = 'White', fill = 'Dark Orange') + labs(
+    title = "Lung Capacity Data By Age",
+    subtitle = "Age in Years",
+    caption = "Source: Group 5"
+  )
+
+```
+
+
+```{R}
+
+#This is just to store the data into variables for ease to use.
+gender <- LungCapData$Gender
+Age <- LungCapData$Age
+Height <- LungCapData$Height
+LungCap <- LungCapData$LungCap
+Smoke <- LungCapData $Smoke
+Ceasarean <- LungCapData$Caesarean
+
+## 1st Analysis
+
+#Creating the Age Groups as the subset of Age
+AgeGroups <- cut(Age, breaks = c(0,9,16,19), labels = c("0-9","10-16","16+"))
+AgeGroups[1:3]
+
+## Boxplot of Age Group, Lung Capacity and Smoking.
+
+boxplot(LungCap ~ Smoke*AgeGroups, las = 1 , main="Lung Capacity of Smokers and Non-Smokers for Each Group", col=c(5,3), ylab = "Lung Capacity", xlab = "Age Groups")
+
+#Box plot showing different age groups of smokers and non-smokers and lung capacity of each group that will can interpret and help us to compare the difference in lung capacity.
+
+#Result of 1st analysis interprets lung capacity of smokers in different age groups, we have divided age in three groups and we have calculated what is the lung capacity is greater and if they are smokers or non-smokers.
+
+## 2nd Analysis
+
+## Box plot of Lung Capacity with Gender Respectively.
+
+boxplot(LungCapData$LungCap ~ LungCapData$Gender,
+main = "Lung Capacity By Gender",
+ylab = "Lung Capacity",
+xlab = NULL,
+names = c("Male", "Female"),
+ylim = c(0,16),
+las = 1,
+col = c("blue","red"),
+border = "black")
+
+## Histogram of Lung Capacity with Gender.
+
+ggplot(data = LungCapData, aes(x = LungCap)) +
+  geom_histogram(aes(fill = gender),bins = 18, color = 'Black')
+
+#Interpreted result for this plot tells us that although there is no significant difference in lung capacity of males and females but Males lung capacity is slightly higher than Female.
+
+```
+
+```{R}
+
+#Hypothesis Test Now
+
+#H0: Variance Lung Capacity of Smokers = Variance Lung Capactiy of Non-Smokers.
+#H1: Variance Lung Capacity of Smokers != Variance Lung Capactiy of Non-Smokers.
+
+ftest <- var.test(LungCap~Smoke, data = LungCapData)
+ftest
+
+
+#As the test shows that the p value is less than 0.05 so we reject H0 that is null hypothesis and we accept the alternative hypothesis H1, so for the t-test now the variance equal would be kept to false.
+
+# H0 : Mean Lung Capacity Of Non-Smokers = Mean Lung Capacity of Smokers.
+# H1 : Mean Lung Capacity Of Non-Smokers != Mean Lung Capacity of Smokers.
+
+## The point estimates for the two population variances:
+
+t.test(LungCap~Smoke, alternative = "two.sided", conf.level = 0.95, var.equal = FALSE, paired = F)
+
+#As the p value is lower than our confidence interval, that shows us that the H0 is rejected and we'll go with the alternative hypothesis. Interpreting the test, it says that the mean of smokers lung capacity is not equal to mean of non-smokers lung capacity.
+
+
+
+## 2nd Hypothesis
+
+Females <- subset(LungCapData, LungCapData$Gender == 1)
+Males <- subset(LungCapData, LungCapData$Gender == 0)
+
+#H0: Variance Lung Capacity of Males = Variance Lung Capacity of Females.
+#H1: Variance Lung Capacity of Males != Variance Lung Capacity of Females.
+
+ftest1 <- var.test(LungCap ~ gender, data = LungCapData)
+ftest1
+
+#After F-Test we find out that
+
+t.test(LungCapData$LungCap ~ LungCapData$Gender, alt="two.sided", conf=0.95, var.eq=TRUE, Paired=F)
+
+```
